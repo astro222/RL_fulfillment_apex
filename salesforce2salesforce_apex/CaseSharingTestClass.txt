@@ -1,0 +1,285 @@
+@isTest
+
+/* 
+  This class tests the triggers and classes involved in sharing cases and tasks
+  with Legal Inc.
+*/
+
+class CaseSharingTestLegalInc {
+    
+private static testmethod void basicUUIDCaseShareTest() {
+    // Data setup
+    Profile p = [SELECT id FROM Profile WHERE name= 'Rocket Lawyer Sales'];
+        
+    User toUser = new User(alias = 'srep', 
+        email='salesrep@rocketlawyer.com', 
+        emailencodingkey='UTF-8', 
+        lastname='SalesRep', 
+        languagelocalekey='en_US', 
+        localesidkey='en_US', profileid = p.Id, 
+        timezonesidkey='America/Los_Angeles', 
+        username='salerep@rocketlawyer.com',
+        Records_Owned__c = null,
+        isActive=true, 
+        Receiving_Leads__c=true);
+
+    Account account = new Account();
+        account.name='Test';
+        account.BillingCity='San Francisco';    
+        account.BillingCountry='US';
+        account.BillingPostalCode='94104';
+        account.BillingState='CA';
+        account.BillingStreet='123 Country Road';
+        insert account;
+
+    IncorporationOrder__c incOrder = new IncorporationOrder__c();
+    incOrder.uuid__c = 'TESTING123';
+    insert incOrder;
+
+    Test.startTest();
+
+      System.runAs(toUser) {
+        Case theCase = new Case();
+        theCase.subject = 'test legal Inc sync';
+        theCase.Incorporation_Order_UUID__c = 'TESTING123';
+        theCase.AccountId = account.Id;
+        theCase.IncorporationOrderId__c = theCase.Incorporation_Order__c ;
+        theCase.Case_Workflow_Owner__c = 'Legal Inc Owns Case';       
+
+        insert theCase;
+      }
+
+    Test.stopTest();
+
+    // CHeck result
+    Case caseRes = [SELECT id, Incorporation_Order__c FROM Case WHERE Incorporation_Order_UUID__c = 'TESTING123' LIMIT 1];
+    System.assertNotEquals(null, caseRes.Incorporation_Order__c);
+  }
+    
+  private static testmethod void basicCaseCommentShareTest() {
+    // Data setup
+    Profile p = [SELECT id FROM Profile WHERE name= 'Rocket Lawyer Sales'];
+        
+    User toUser = new User(alias = 'srep', 
+        email='salesrep@rocketlawyer.com', 
+        emailencodingkey='UTF-8', 
+        lastname='SalesRep', 
+        languagelocalekey='en_US', 
+        localesidkey='en_US', profileid = p.Id, 
+        timezonesidkey='America/Los_Angeles', 
+        username='salerep@rocketlawyer.com',
+        Records_Owned__c = null,
+        isActive=true, 
+        Receiving_Leads__c=true);
+
+    Account account = new Account();
+        account.name='Test';
+        account.BillingCity='San Francisco';    
+        account.BillingCountry='US';
+        account.BillingPostalCode='94104';
+        account.BillingState='CA';
+        account.BillingStreet='123 Country Road';
+        insert account;
+
+    IncorporationOrder__c incOrder = new IncorporationOrder__c();
+    incOrder.uuid__c = 'TESTING123';
+    insert incOrder;
+
+    Test.startTest();
+
+      System.runAs(toUser) {
+        Case theCase = new Case();
+        theCase.subject = 'test subj';
+        theCase.Incorporation_Order_UUID__c = 'TESTING123';
+        theCase.AccountId = account.Id;
+        theCase.IncorporationOrderId__c = theCase.Incorporation_Order__c ;
+        theCase.Case_Workflow_Owner__c = 'Legal Inc Owns Case';
+
+        insert theCase;
+
+        caseComment thecCom = new caseComment ();
+        thecCom.parentId = theCase.Id;
+        thecCom.CommentBody = 'test';
+
+        insert thecCom;
+      }
+
+    Test.stopTest();
+
+    // CHeck result
+    Case caseRes = [SELECT id, Incorporation_Order__c FROM Case WHERE Incorporation_Order_UUID__c = 'TESTING123' LIMIT 1];
+    System.assertNotEquals(null, caseRes.Incorporation_Order__c);
+  }
+
+
+  private static testmethod void basicTaskShareTest() {
+    // Data setup
+    Profile p = [SELECT id FROM Profile WHERE name= 'Rocket Lawyer Sales'];
+        
+    User toUser = new User(alias = 'srep', 
+        email='salesrep@rocketlawyer.com', 
+        emailencodingkey='UTF-8', 
+        lastname='SalesRep', 
+        languagelocalekey='en_US', 
+        localesidkey='en_US', profileid = p.Id, 
+        timezonesidkey='America/Los_Angeles', 
+        username='salerep@rocketlawyer.com',
+        Records_Owned__c = null,
+        isActive=true, 
+        Receiving_Leads__c=true);
+
+    Account account = new Account();
+        account.name='Test';
+        account.BillingCity='San Francisco';    
+        account.BillingCountry='US';
+        account.BillingPostalCode='94104';
+        account.BillingState='CA';
+        account.BillingStreet='123 Country Road';
+        insert account;
+
+    IncorporationOrder__c incOrder = new IncorporationOrder__c();
+    incOrder.uuid__c = 'TESTING123';
+    insert incOrder;
+
+    Test.startTest();
+
+      System.runAs(toUser) {
+        Case theCase = new Case();
+        theCase.subject = 'test subj';
+        theCase.Incorporation_Order_UUID__c = 'TESTING123';
+        theCase.AccountId = account.Id;
+        theCase.IncorporationOrderId__c = theCase.Incorporation_Order__c ;
+        theCase.Case_Workflow_Owner__c = 'Legal Inc Owns Case';
+
+        insert theCase;
+
+        Task theTask = new Task();
+        theTask.WhatId = theCase.Id;
+        theTask.ActivityDate = Date.Today().addDays(10);
+        theTask.Subject = 'Call';
+
+        insert theTask;
+      }
+
+    Test.stopTest();
+
+    // CHeck result
+    Case caseRes = [SELECT id, Incorporation_Order__c FROM Case WHERE Incorporation_Order_UUID__c = 'TESTING123' LIMIT 1];
+    System.assertNotEquals(null, caseRes.Incorporation_Order__c);
+  }
+
+
+  private static testmethod void basicTaskShareTest2() {
+    // Data setup
+    Profile p = [SELECT id FROM Profile WHERE name= 'Rocket Lawyer Sales'];
+        
+    User toUser = new User(alias = 'srep', 
+        email='salesrep@rocketlawyer.com', 
+        emailencodingkey='UTF-8', 
+        lastname='SalesRep', 
+        languagelocalekey='en_US', 
+        localesidkey='en_US', profileid = p.Id, 
+        timezonesidkey='America/Los_Angeles', 
+        username='salerep@rocketlawyer.com',
+        Records_Owned__c = null,
+        isActive=true, 
+        Receiving_Leads__c=true);
+
+    Account account = new Account();
+        account.name='Test';
+        account.BillingCity='San Francisco';    
+        account.BillingCountry='US';
+        account.BillingPostalCode='94104';
+        account.BillingState='CA';
+        account.BillingStreet='123 Country Road';
+        insert account;
+
+    IncorporationOrder__c incOrder = new IncorporationOrder__c();
+    incOrder.uuid__c = 'TESTING123';
+    insert incOrder;
+
+    Test.startTest();
+
+      System.runAs(toUser) {
+        Case theCase = new Case();
+        theCase.subject = 'test subj';
+        theCase.Incorporation_Order_UUID__c = 'TESTING123';
+        theCase.AccountId = account.Id;
+        theCase.IncorporationOrderId__c = theCase.Incorporation_Order__c ;
+        theCase.Case_Workflow_Owner__c = 'ACS Owns Case';
+
+        insert theCase;
+
+        Task theTask = new Task();
+        theTask.WhatId = theCase.Id;
+        theTask.ActivityDate = Date.Today().addDays(10);
+        theTask.Subject = 'Call';
+
+        insert theTask;
+      }
+
+    Test.stopTest();
+
+    // CHeck result
+    Case caseRes = [SELECT id, Incorporation_Order__c FROM Case WHERE Incorporation_Order_UUID__c = 'TESTING123' LIMIT 1];
+    System.assertNotEquals(null, caseRes.Incorporation_Order__c);
+  }
+
+  private static testmethod void basicUpdateValidationTest() {
+    // Data setup
+    Profile p = [SELECT id FROM Profile WHERE name= 'Rocket Lawyer Sales'];
+        
+    User toUser = new User(alias = 'srep', 
+        email='salesrep@rocketlawyer.com', 
+        emailencodingkey='UTF-8', 
+        lastname='SalesRep', 
+        languagelocalekey='en_US', 
+        localesidkey='en_US', profileid = p.Id, 
+        timezonesidkey='America/Los_Angeles', 
+        username='salerep@rocketlawyer.com',
+        Records_Owned__c = null,
+        isActive=true, 
+        Receiving_Leads__c=true);
+
+    Account account = new Account();
+        account.name='Test';
+        account.BillingCity='San Francisco';    
+        account.BillingCountry='US';
+        account.BillingPostalCode='94104';
+        account.BillingState='CA';
+        account.BillingStreet='123 Country Road';
+        insert account;
+
+    IncorporationOrder__c incOrder = new IncorporationOrder__c();
+    incOrder.uuid__c = 'TESTING123';
+    insert incOrder;
+
+    Case theCase = new Case();
+    theCase.subject = 'test subj';
+    theCase.Incorporation_Order_UUID__c = 'TESTING123';
+    theCase.AccountId = account.Id;
+    theCase.Case_Workflow_Owner__c = 'Legal Inc Owns Case';
+    theCase.Status = 'New';
+    theCase.Priority = 'Medium';
+    theCase.Type = 'Complete Plan';
+    theCase.Reason = 'Compliance Health';
+    theCase.Origin = 'Lawyers';
+    theCase.IncorporationOrderId__c = theCase.Incorporation_Order__c ;
+    theCase.Case_Workflow_Owner__c = 'Legal Inc Owns Case';
+    insert theCase;
+    TriggerHelperClass.unsetAlreadyfired();
+
+    Test.startTest();
+
+      System.runAs(toUser) {
+        theCase.subject = 'changing sub';
+        try {
+          update theCase;
+        } catch (Exception e) {
+          //we expect to get this exception.  
+        }
+      }
+
+    Test.stopTest();
+  }
+}

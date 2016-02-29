@@ -1,0 +1,44 @@
+trigger CaseBefore2 on Case (before insert, before update) {
+    Map<String, Id>profileMap = new Map<String, Id>();
+    for (Profile cur : [SELECT Id,Name FROM Profile]) {
+        profileMap.put(cur.Name, cur.Id);
+    }
+
+    if (Trigger.isInsert) {
+        Set<String>uuids = new Set<String>();
+        for (Case cur : Trigger.new) {
+
+            if (cur.Incorporation_Order_UUID__c != null && cur.recordType.Name !='QandA') {
+                uuids.add(cur.Incorporation_Order_UUID__c);
+            }
+        }
+
+        if (uuids != null && !uuids.isEmpty()) {
+            Map<String, IncorporationOrder__c>incorpOrderMap = new Map<String, IncorporationOrder__c>();
+            for (IncorporationOrder__c curIncorp : [SELECT id, uuid__c, IncorporationRequestor__c  
+                                                     FROM IncorporationOrder__c 
+                                                     WHERE uuid__c in :uuids]) {
+                incorpOrderMap.put(curIncorp.uuid__c, curIncorp);
+            }
+
+            for (Case cur : Trigger.new) {
+                if (cur.Incorporation_Order_UUID__c != null && incorpOrderMap.containsKey(cur.Incorporation_Order_UUID__c)) {
+                    cur.IncorporationOrderId__c = incorpOrderMap.get(cur.Incorporation_Order_UUID__c).Id;
+                    cur.Incorporation_Order__c = incorpOrderMap.get(cur.Incorporation_Order_UUID__c).Id;
+                    cur.ContactId = incorpOrderMap.get(cur.Incorporation_Order_UUID__c).IncorporationRequestor__c;
+                }
+            }
+        }
+    }
+    if (!TriggerHelperClass.hasAlreadyfired()) {
+        TriggerHelperClass.setAlreadyfired();
+        
+        if (Trigger.isUpdate) {
+            for (Case cur : Trigger.new) {
+                if (Trigger.oldMap.get(cur.Id).Case_Workflow_Owner__c == 'Legal Inc Owns Case' && UserInfo.getProfileId() != profileMap.get('System Administrator') && UserInfo.getProfileId() != profileMap.get('CSR Manager')  && UserInfo.getFirstName() != 'Connection' && UserInfo.getLastName() != 'User') {
+                    cur.Case_Workflow_Owner__c.addError('Can\'t edit case that is owned by Legal Inc.');
+                }
+            }
+        }
+    }
+}

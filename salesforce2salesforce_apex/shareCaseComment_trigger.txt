@@ -1,0 +1,5 @@
+trigger beforeInsertCaseComment on CaseComment(before insert){
+    for (CaseComment cc: Trigger.New) {
+        cc.IsPublished = True;
+    }
+}

@@ -1,0 +1,17 @@
+trigger shareIncorpToLegalInc on IncorporationOrder__c (after insert) {
+    Id networkId = ConnectionHelper.getConnectionId('Object Legal');
+    List<PartnerNetworkRecordConnection> recordConnectionToInsert = new List<PartnerNetworkRecordConnection>();
+    for (IncorporationOrder__c inc : Trigger.new){
+            PartnerNetworkRecordConnection newRecord = new PartnerNetworkRecordConnection ();
+            newRecord.ConnectionId = networkId;
+            newRecord.LocalRecordId = inc.id;
+            newRecord.SendClosedTasks = true;
+            newRecord.SendOpenTasks = true;
+            newRecord.SendEmails = true;
+            recordConnectionToInsert.add(newRecord);
+    }
+    if (recordConnectionToInsert.size() > 0){
+        System.debug('>>> Sharing' + recordConnectionToInsert.size() + 'records');
+        insert recordConnectionToInsert;
+    }    
+}

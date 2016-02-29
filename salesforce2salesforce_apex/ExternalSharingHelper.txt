@@ -1,0 +1,90 @@
+/*
+  Name    :  ExternalSharingHelper2
+  Description  :  This class is used to create relationship between the shared records i.e., relating IncorporationOrder__c on Case object for Legal Inc
+*/
+public class ExternalSharingHelper2 { 
+    
+  /*
+    Name      :  linkIncorporation
+    Input param    :  CaseIdMap
+    output param  :  none
+    Description    :  Queries the local record Id for the partner Record Id of Incorporation and relates it to Case
+  
+    @future 
+    public static void linkIncorporation(Map<Id,Id> CaseIdMap) { 
+  
+        Set<Id> partnerIncorporationIdSet = new Set<Id>(); 
+        for (Id partnerIncorporationId : CaseIdMap.values()) { 
+            partnerIncorporationIdSet.add(partnerIncorporationId); //collecting all IncorporationId which are in source org
+        } 
+        
+        Map<Id,Id> IncorporationMap = new Map<Id,Id>(); 
+        
+        for (PartnerNetworkRecordConnection contactConnection : 
+            [SELECT Id, Status, ConnectionId, PartnerRecordId, LocalRecordId 
+             FROM PartnerNetworkRecordConnection 
+             WHERE PartnerRecordId in :partnerIncorporationIdSet]) { //querying for Incorporation records that are shared from source organization
+                
+            if ( contactConnection.Status == 'Sent' || contactConnection.Status == 'Received') {                                                                
+                IncorporationMap.put(contactConnection.PartnerRecordId, contactConnection.LocalRecordId); //creating a map to store local record id for the partner record
+            } 
+        } 
+        List<Case> localCaselist = new List<Case>(); 
+        
+        for (Id CaseId : CaseIdMap.keySet()) { 
+            Case CaseForUpdate = new Case (id=CaseId); 
+
+      CaseForUpdate.Incorporation_Order__c = IncorporationMap.get(CaseIdMap.get(CaseId)); //updating the case with local incorporation id 
+            
+            localCaselist.add(CaseForUpdate);                                                          
+        }                                                            
+        
+        database.update(localCaselist,false); //updating the cases
+    }
+  */
+
+  public static void shareCasesToLegalinc(Set<Id>caseIds) {
+    Id networkId = (!Test.isRunningTest()) ? ConnectionHelper.getConnectionId('Object Legal') : null;
+
+    List<PartnerNetworkRecordConnection>shareRecords = new List<PartnerNetworkRecordConnection>();
+
+    for(Id curCaseId : caseIds) {    
+      PartnerNetworkRecordConnection newrecord = new PartnerNetworkRecordConnection();
+
+        newrecord.ConnectionId = networkId;
+        newrecord.LocalRecordId = curCaseId;  
+        newrecord.SendClosedTasks = true;
+        newrecord.SendOpenTasks = true;
+        newrecord.SendEmails = true;
+
+        shareRecords.add(newRecord);
+    }   
+
+    if (shareRecords != null && !shareRecords.isEmpty() && !Test.isRunningTest()) {
+      insert shareRecords;
+    }
+  }
+
+  public static void shareTasksToLegalInc(Map<Id, Id>taskMap) {
+    Id networkId = (!Test.isRunningTest()) ? ConnectionHelper.getConnectionId('Object Legal') : null;
+
+    List<PartnerNetworkRecordConnection>shareRecords = new List<PartnerNetworkRecordConnection>();
+
+    for(Id curTaskId : taskMap.keySet()) {    
+      PartnerNetworkRecordConnection newrecord = new PartnerNetworkRecordConnection();
+
+        newrecord.ConnectionId = networkId;
+        newrecord.LocalRecordId = curTaskId;
+        newrecord.ParentRecordId = taskMap.get(curTaskId);
+        newrecord.SendEmails = true;
+
+        shareRecords.add(newRecord);
+    }   
+
+    if (shareRecords != null && !shareRecords.isEmpty() && !Test.isRunningTest()) {
+      insert shareRecords;
+    }
+  }
+
+
+}

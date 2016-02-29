@@ -1,0 +1,25 @@
+trigger IncorpAttachment on Attachment (before insert) {
+    List<PartnerNetworkConnection> partnerNetConList = [
+        	SELECT id 
+        	FROM PartnerNetworkConnection 
+        	WHERE connectionName = 'Object Legal' 
+        	AND connectionStatus = 'Accepted' LIMIT 1];
+    List<PartnerNetworkRecordConnection> toShare = new List<PartnerNetworkRecordConnection>();  
+    for (Attachment a : trigger.new){
+        if (String.valueOf(a.ParentId).startsWith(IncorporationOrder__c.sObjectType.getDescribe().getKeyPrefix())) {   	  
+            if (partnerNetConlist.size()==1){
+                PartnerNetworkConnection connection = partnerNetConList.get(0);            
+                PartnerNetworkRecordConnection newConnection = 
+                        new PartnerNetworkRecordConnection(
+                        ParentRecordId = a.ParentId,
+                        ConnectionId = connection.Id,
+                        LocalRecordId = a.Id
+                        );
+                toShare.add(newConnection);
+            }            
+        }        
+    }
+    if(toShare.size()>0){
+       insert toShare;
+    }	
+}

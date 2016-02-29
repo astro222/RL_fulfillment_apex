@@ -1,0 +1,27 @@
+trigger TaskAfter4 on Task (after insert) {
+    
+    Map<Id, Id> taskToCaseIdLegalInc = new Map<Id, Id>();
+    Map<Id, Id> taskToCaseIdACS = new Map<Id, Id>();
+    Set<Id> validIds = new Set<Id>();
+    for (Task cur : trigger.new) {
+        if (cur.WhatId != null){
+            String whatIdStr = cur.WhatId;
+            if (whatIdStr != null && whatIdStr.substring(0, 3) == '500') {
+            String whosOrder  = [SELECT Case_workflow_owner__c FROM Case WHERE Id = :cur.WhatId ].Case_workflow_owner__c;
+              validIds.add(cur.WhatId);
+                if (whosOrder == 'Legal Inc Owns Case') {
+                    taskToCaseIdLegalInc.put(cur.Id, cur.WhatId);
+                } else  if (whosOrder == 'ACS Owns Case') {
+                    taskToCaseIdACS.put(cur.Id, cur.WhatId);
+                } 
+            }
+        }
+    }
+    
+    if (!taskToCaseIdACS.isEmpty()) {
+        ExternalSharingHelper.shareTasksToACS(taskToCaseIdACS);
+    }
+    if (!taskToCaseIdLegalInc.isEmpty()) {
+        ExternalSharingHelper2.shareTasksToLegalInc(taskToCaseIdLegalInc);
+    }
+}

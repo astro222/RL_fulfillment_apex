@@ -1,0 +1,26 @@
+trigger CaseAfter4 on Case (after insert, after update) {
+    
+    Set<Id>casesToShareLegalInc = new Set<Id>();
+    Set<Id>casesToShareACS = new Set<Id>();
+    for (Case cur : Trigger.new) {
+        System.debug('****** incorp order = ' + cur.Case_workflow_owner__c );
+        if (cur.Case_workflow_owner__c == 'Legal Inc Owns Case') {
+            System.debug('****** incorp order = ' + cur.Case_workflow_owner__c );
+            casesToShareLegalInc.add(cur.Id);
+        } else if (cur.Case_workflow_owner__c == 'ACS Owns Case'){
+            System.debug('****** incorp order = ' + cur.Case_workflow_owner__c );
+            casesToShareACS.add(cur.Id);
+        } else {
+            System.debug('****** by default shared to Rocket Lawyer *****'); 
+           // casesToShareLegalInc.add(cur.Id); 
+        }  
+    }
+
+    if (!casesToShareLegalInc.isEmpty()) {
+        ExternalSharingHelper2.shareCasesToLegalInc(casesToShareLegalInc);
+    }
+
+    if (!casesToShareACS.isEmpty()){
+        ExternalSharingHelper.shareCasestoACS(casesToShareACS);
+    }  
+}
